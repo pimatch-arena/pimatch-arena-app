@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PiMatch Arena — توقعات كرة القدم</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      margin: 0;
+      background: #0b1020;
+      color: #f8fafc;
+      padding: 16px;
+    }
+    .container { max-width: 520px; margin: 0 auto; }
+    .header {
+      background: linear-gradient(135deg, #5b21b6, #7c3aed);
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    .header h1 { margin: 0 0 6px; font-size: 22px; }
+    .header p { margin: 0; font-size: 13px; opacity: 0.9; }
+    .card {
+      background: #141c33;
+      border: 1px solid #26335c;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .match-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+    .match-meta { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
+    .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    button.pick {
+      background: #1e294b;
+      color: #e2e8f0;
+      border: 1px solid #33457a;
+      border-radius: 10px;
+      padding: 10px 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    button.pick.active {
+      background: #7c3aed;
+      border-color: #a78bfa;
+      color: #fff;
+      font-weight: 700;
+    }
+    .primary-btn {
+      width: 100%;
+      background: #10b981;
+      color: #06281e;
+      border: none;
+      border-radius: 12px;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .pi-btn {
+      width: 100%;
+      background: #f59e0b;
+      color: #1f1300;
+      border: none;
+      border-radius: 12px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .status {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #0f172a;
+      border: 1px solid #1e293b;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚽ PiMatch Arena</h1>
+      <p>غرف توقعات ودية لمجتمع Pi — نسخة تجريبية (Testnet)</p>
+      <button class="pi-btn" id="piLoginBtn">تسجيل الدخول عبر Pi Testnet</button>
+    </div>
+
+    <div class="card">
+      <div class="match-title">Real Madrid vs Barcelona</div>
+      <div class="match-meta">الدوري الإسباني • اختر نتيجتك المتوقعة</div>
+      <div class="options" data-match="m1">
+        <button class="pick" data-val="Real Madrid">فوز الريال</button>
+        <button class="pick" data-val="Draw">تعادل</button>
+        <button class="pick" data-val="Barcelona">فوز برشلونة</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="match-title">Galatasaray vs Fenerbahçe</div>
+      <div class="match-meta">قمة الدوري التركي • اختر نتيجتك المتوقعة</div>
+      <div class="options" data-match="m2">
+        <button class="pick" data-val="Galatasaray">فوز غلطة سراي</button>
+        <button class="pick" data-val="Draw">تعادل</button>
+        <button class="pick" data-val="Fenerbahçe">فوز فنربخشة</button>
+      </div>
+    </div>
+
+    <button class="primary-btn" id="saveBtn">حفظ التوقعات</button>
+    <div class="status" id="statusBox">الحالة: جاهز لاختيار توقعاتك.</div>
+  </div>
+
+  <script>
+    const selections = {};
+    const statusBox = document.getElementById("statusBox");
+
+    document.querySelectorAll(".options").forEach((group) => {
+      const matchId = group.dataset.match;
+      group.querySelectorAll("button.pick").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          group.querySelectorAll("button.pick").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          selections[matchId] = btn.dataset.val;
+        });
+      });
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const keys = Object.keys(selections);
+      if (keys.length === 0) {
+        statusBox.textContent = "اختر نتيجة لمباراة واحدة على الأقل أولاً.";
+        return;
+      }
+      localStorage.setItem("pimatch_picks", JSON.stringify(selections));
+      statusBox.textContent =
+        "✅ تم حفظ توقعاتك محلياً:\n" +
+        JSON.stringify(selections, null, 2);
+    });
+
+    document.getElementById("piLoginBtn").addEventListener("click", async () => {
+      if (!window.Pi) {
+        statusBox.textContent = "افتح الرابط داخل Pi Browser لتفعيل مصادقة Pi SDK.";
+        return;
+      }
+      try {
+        window.Pi.init({ version: "2.0", sandbox: true });
+        const scopes = ["username"];
+        const auth = await window.Pi.authenticate(scopes, (incompletePayment) => {
+          console.log("Incomplete payment:", incompletePayment);
+        });
+        statusBox.textContent = `🎉 مرحباً بك في PiMatch Arena يا @${auth.user.username}`;
+      } catch (err) {
+        statusBox.textContent = "تعذر تسجيل الدخول عبر Pi: " + (err.message || err);
+      }
+    });
+  </script>
+</body>
+</html>
