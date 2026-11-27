@@ -1,163 +1,305 @@
+
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PiMatch Arena — توقعات كرة القدم</title>
-  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <title>PiMatch Arena — Sports Predictions</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    :root {
+      --bg: #0b1020;
+      --card: #141c33;
+      --card-2: #1b2645;
+      --accent: #f59e0b;
+      --accent-2: #10b981;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body {
-      margin: 0;
-      background: #0b1020;
-      color: #f8fafc;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
       padding: 16px;
     }
-    .container { max-width: 520px; margin: 0 auto; }
-    .header {
-      background: linear-gradient(135deg, #5b21b6, #7c3aed);
-      padding: 18px;
+    .container { max-width: 780px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 16px;
       border-radius: 16px;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
     }
-    .header h1 { margin: 0 0 6px; font-size: 22px; }
-    .header p { margin: 0; font-size: 13px; opacity: 0.9; }
-    .card {
-      background: #141c33;
-      border: 1px solid #26335c;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .match-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-    .match-meta { font-size: 12px; color: #94a3b8; margin-bottom: 10px; }
-    .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    button.pick {
-      background: #1e294b;
-      color: #e2e8f0;
-      border: 1px solid #33457a;
+    .brand h1 { font-size: 1.35rem; color: var(--accent); }
+    .brand p { font-size: 0.85rem; color: var(--muted); }
+    .user-box { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    input, button {
       border-radius: 10px;
-      padding: 10px 6px;
-      font-size: 13px;
-      cursor: pointer;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 0.9rem;
     }
-    button.pick.active {
-      background: #7c3aed;
-      border-color: #a78bfa;
-      color: #fff;
-      font-weight: 700;
+    input {
+      background: var(--card-2);
+      color: var(--text);
+      min-width: 170px;
     }
-    .primary-btn {
-      width: 100%;
-      background: #10b981;
-      color: #06281e;
-      border: none;
-      border-radius: 12px;
-      padding: 13px;
-      font-size: 15px;
+    button {
+      background: var(--accent);
+      color: #0b1020;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 8px;
     }
-    .pi-btn {
-      width: 100%;
-      background: #f59e0b;
-      color: #1f1300;
-      border: none;
-      border-radius: 12px;
-      padding: 11px;
-      font-size: 14px;
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn { flex: 1; background: var(--card); color: var(--muted); }
+    .tab-btn.active { background: var(--accent); color: #0b1020; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    .match-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .teams {
+      font-size: 1.1rem;
       font-weight: 700;
-      cursor: pointer;
-      margin-top: 10px;
+      margin-bottom: 14px;
     }
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .opt-btn {
+      background: var(--card-2);
+      color: var(--text);
+      padding: 10px 8px;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+    .opt-btn.selected {
+      background: var(--accent-2);
+      color: #062016;
+      border-color: var(--accent-2);
+    }
+    .leader-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .leader-row:last-child { border-bottom: none; }
     .status {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 12px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
-      font-size: 13px;
-      line-height: 1.6;
-      white-space: pre-line;
+      font-size: 0.85rem;
+      color: var(--accent-2);
+      margin-bottom: 12px;
+      min-height: 20px;
     }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
-      <h1>⚽ PiMatch Arena</h1>
-      <p>غرف توقعات ودية لمجتمع Pi — نسخة تجريبية (Testnet)</p>
-      <button class="pi-btn" id="piLoginBtn">تسجيل الدخول عبر Pi Testnet</button>
-    </div>
-
-    <div class="card">
-      <div class="match-title">Real Madrid vs Barcelona</div>
-      <div class="match-meta">الدوري الإسباني • اختر نتيجتك المتوقعة</div>
-      <div class="options" data-match="m1">
-        <button class="pick" data-val="Real Madrid">فوز الريال</button>
-        <button class="pick" data-val="Draw">تعادل</button>
-        <button class="pick" data-val="Barcelona">فوز برشلونة</button>
+    <header>
+      <div class="brand">
+        <h1>PiMatch Arena</h1>
+        <p>Predict match outcomes &amp; compete for top 3 Pi rewards</p>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="match-title">Galatasaray vs Fenerbahçe</div>
-      <div class="match-meta">قمة الدوري التركي • اختر نتيجتك المتوقعة</div>
-      <div class="options" data-match="m2">
-        <button class="pick" data-val="Galatasaray">فوز غلطة سراي</button>
-        <button class="pick" data-val="Draw">تعادل</button>
-        <button class="pick" data-val="Fenerbahçe">فوز فنربخشة</button>
+      <div class="user-box">
+        <input id="piUsernameInput" type="text" placeholder="Enter Pi username" />
+        <button id="saveUserBtn">Save User</button>
       </div>
+    </header>
+
+    <div id="statusMsg" class="status"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="matchesTab">Matches</button>
+      <button class="tab-btn" data-tab="leaderboardTab">Leaderboard</button>
     </div>
 
-    <button class="primary-btn" id="saveBtn">حفظ التوقعات</button>
-    <div class="status" id="statusBox">الحالة: جاهز لاختيار توقعاتك.</div>
+    <section id="matchesTab">
+      <div id="matchesList">Loading matches...</div>
+    </section>
+
+    <section id="leaderboardTab" class="hidden">
+      <div class="card">
+        <h2 style="margin-bottom: 12px; font-size: 1.1rem;">Top Players</h2>
+        <div id="leaderboardList">Loading leaderboard...</div>
+      </div>
+    </section>
   </div>
 
   <script>
-    const selections = {};
-    const statusBox = document.getElementById("statusBox");
+    const SUPABASE_URL = "https://vbutahmmrsyuyfbxfbfy.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_jX2Hz_-FY2NQb4GP1hnuUw_rNagc7UQ";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    document.querySelectorAll(".options").forEach((group) => {
-      const matchId = group.dataset.match;
-      group.querySelectorAll("button.pick").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          group.querySelectorAll("button.pick").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          selections[matchId] = btn.dataset.val;
-        });
+    let currentUser = localStorage.getItem("pimatch_username") || "";
+    const usernameInput = document.getElementById("piUsernameInput");
+    const statusMsg = document.getElementById("statusMsg");
+
+    if (currentUser) {
+      usernameInput.value = currentUser;
+      setStatus(`Active player: @${currentUser}`);
+    }
+
+    function setStatus(msg) {
+      statusMsg.textContent = msg;
+    }
+
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const target = btn.dataset.tab;
+        document.getElementById("matchesTab").classList.toggle("hidden", target !== "matchesTab");
+        document.getElementById("leaderboardTab").classList.toggle("hidden", target !== "leaderboardTab");
+        if (target === "leaderboardTab") loadLeaderboard();
       });
     });
 
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      const keys = Object.keys(selections);
-      if (keys.length === 0) {
-        statusBox.textContent = "اختر نتيجة لمباراة واحدة على الأقل أولاً.";
+    document.getElementById("saveUserBtn").addEventListener("click", async () => {
+      const cleanName = usernameInput.value.trim().replace(/^@+/, "");
+      if (!cleanName) {
+        setStatus("Please enter a valid Pi username.");
         return;
       }
-      localStorage.setItem("pimatch_picks", JSON.stringify(selections));
-      statusBox.textContent =
-        "✅ تم حفظ توقعاتك محلياً:\n" +
-        JSON.stringify(selections, null, 2);
+      currentUser = cleanName;
+      localStorage.setItem("pimatch_username", currentUser);
+
+      const { error } = await sb
+        .from("users")
+        .upsert({ pi_username: currentUser }, { onConflict: "pi_username" });
+
+      if (error) {
+        setStatus("Could not save user: " + error.message);
+      } else {
+        setStatus(`Saved player: @${currentUser}`);
+        loadMatches();
+      }
     });
 
-    document.getElementById("piLoginBtn").addEventListener("click", async () => {
-      if (!window.Pi) {
-        statusBox.textContent = "افتح الرابط داخل Pi Browser لتفعيل مصادقة Pi SDK.";
+    async function loadMatches() {
+      const matchesList = document.getElementById("matchesList");
+      const { data: matches, error } = await sb
+        .from("matches")
+        .select("*")
+        .order("match_time", { ascending: true });
+
+      if (error) {
+        matchesList.innerHTML = `<div class="card">Error loading matches: ${error.message}</div>`;
         return;
       }
-      try {
-        window.Pi.init({ version: "2.0", sandbox: true });
-        const scopes = ["username"];
-        const auth = await window.Pi.authenticate(scopes, (incompletePayment) => {
-          console.log("Incomplete payment:", incompletePayment);
-        });
-        statusBox.textContent = `🎉 مرحباً بك في PiMatch Arena يا @${auth.user.username}`;
-      } catch (err) {
-        statusBox.textContent = "تعذر تسجيل الدخول عبر Pi: " + (err.message || err);
+
+      if (!matches || matches.length === 0) {
+        matchesList.innerHTML = `<div class="card">No matches available yet. Add upcoming matches in Supabase Table Editor.</div>`;
+        return;
       }
-    });
+
+      let userPredictions = {};
+      if (currentUser) {
+        const { data: preds } = await sb
+          .from("predictions")
+          .select("match_id, choice")
+          .eq("pi_username", currentUser);
+        if (preds) {
+          preds.forEach((p) => { userPredictions[p.match_id] = p.choice; });
+        }
+      }
+
+      matchesList.innerHTML = matches.map((m) => {
+        const chosen = userPredictions[m.id] || "";
+        const timeFormatted = new Date(m.match_time).toLocaleString("en-US", {
+          dateStyle: "medium",
+          timeStyle: "short"
+        });
+        return `
+          <div class="card">
+            <div class="match-top">
+              <span>${m.league}</span>
+              <span>${timeFormatted}</span>
+            </div>
+            <div class="teams">${m.home_team} vs ${m.away_team}</div>
+            <div class="options">
+              <button class="opt-btn ${chosen === "home" ? "selected" : ""}" onclick="submitPrediction(${m.id}, 'home')">
+                Home Win<br><strong>${m.home_points} pts</strong>
+              </button>
+              <button class="opt-btn ${chosen === "draw" ? "selected" : ""}" onclick="submitPrediction(${m.id}, 'draw')">
+                Draw<br><strong>${m.draw_points} pts</strong>
+              </button>
+              <button class="opt-btn ${chosen === "away" ? "selected" : ""}" onclick="submitPrediction(${m.id}, 'away')">
+                Away Win<br><strong>${m.away_points} pts</strong>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    window.submitPrediction = async function(matchId, choice) {
+      if (!currentUser) {
+        setStatus("Enter and save your Pi username first.");
+        return;
+      }
+
+      await sb.from("users").upsert({ pi_username: currentUser }, { onConflict: "pi_username" });
+
+      const { error } = await sb
+        .from("predictions")
+        .upsert(
+          { pi_username: currentUser, match_id: matchId, choice },
+          { onConflict: "pi_username,match_id" }
+        );
+
+      if (error) {
+        setStatus("Prediction error: " + error.message);
+      } else {
+        setStatus(`Prediction saved (${choice.toUpperCase()}) for @${currentUser}`);
+        loadMatches();
+      }
+    };
+
+    async function loadLeaderboard() {
+      const list = document.getElementById("leaderboardList");
+      const { data, error } = await sb
+        .from("users")
+        .select("pi_username, total_points")
+        .order("total_points", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        list.innerHTML = `Error loading leaderboard: ${error.message}`;
+        return;
+      }
+      if (!data || data.length === 0) {
+        list.innerHTML = `No players yet.`;
+        return;
+      }
+
+      list.innerHTML = data.map((row, idx) => `
+        <div class="leader-row">
+          <span>#${idx + 1} @${row.pi_username}</span>
+          <strong>${row.total_points} pts</strong>
+        </div>
+      `).join("");
+    }
+
+    loadMatches();
   </script>
 </body>
 </html>
